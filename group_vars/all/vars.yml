@@ -1,0 +1,34 @@
+---
+# Global variables for all hosts
+## General sys vars
+# ansible_become: true
+username: igor
+ansible_user: igor
+docker_dir: /opt/docker/data
+guid: '1000'
+timezone: America/Sao_Paulo
+ssh_public_key: "{{ vault_ssh_public_key }}"
+
+## Pushbullet
+pushbullet_key: "{{ vault_pushbullet_key }}"
+
+## DuckDNS
+duckdns_token: "{{ vault_duckdns_token }}"
+
+## Transmission
+transmission_password: "{{ vault_transmission_password }}"
+
+## Photoprism
+photoprism_admin_password: "{{ vault_photoprism_admin_password }}"
+photoprism_database_password: "{{ vault_photoprism_database_password }}"
+photoprism_database_root_password: "{{ vault_photoprism_database_root_password }}"
+
+## Restic Backup
+restic_version: '0.18.1'
+restic_backup_password: "{{ vault_restic_backup_password }}"
+restic_backup_exclude_paths:
+  - "**/*.part"
+  - "**/Cache/**"
+  - "**/Caches/**"
+  - "**/Thumbnails/**"
+  - "**/Logs/**"

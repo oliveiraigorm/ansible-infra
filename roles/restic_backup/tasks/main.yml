@@ -1,0 +1,6 @@
+---
+- name: Install restic
+  include_tasks: install.yml
+
+- name: Setup restic common configuration
+  include_tasks: setup.yml

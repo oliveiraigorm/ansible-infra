@@ -1,0 +1,19 @@
+---
+- name: Make sure the {{ container_name }} container is created and running
+  docker_container:
+    name: "{{ container_name }}"
+    image: "alturismo/xteve"
+    pull: yes
+    networks:
+      - name: docker_default
+    ports:
+      - "34400:34400"
+    state: 'started'
+    env:
+      "PUID": "{{ guid }}"
+      "PGID": "{{ guid }}"
+      "TZ": "{{ timezone }}"
+    volumes:
+      - "/etc/localtime:/etc/localtime"
+      - "{{ docker_dir }}/{{ container_name }}:/config"
+    restart_policy: unless-stopped

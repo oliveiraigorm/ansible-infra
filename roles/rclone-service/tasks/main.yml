@@ -1,0 +1,20 @@
+---
+- name: "Create systemd mount folder"
+  file:
+    path: /home/igor/.config/systemd/user
+    state: directory
+
+- name: Create Rclone service
+  template: src=rclone@.service.j2 dest=/home/igor/.config/systemd/user/rclone@.service mode=644
+  notify:
+    - reload systemctl
+
+- meta: flush_handlers
+
+- name: Mount onedrive-ipt
+  become_user: igor
+  ansible.builtin.service:
+    name: rclone@onedrive-ipt
+    scope: user
+    enabled: true
+    state: started

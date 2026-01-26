@@ -1,0 +1,94 @@
+---
+- name: Restic Backup Job
+  ansible.builtin.cron:
+    name: "Restic Backup Job"
+    user: "{{  ansible_user  }}"
+    job: /home/igor/bin/restic-custom-backup
+    minute: "00"
+    hour: "5"
+    state: present
+
+- name: "Backup from SK-1000 to WD-1000"
+  ansible.builtin.cron:
+    name: "Backup from SK-1000 to WD-1000"
+    user: "{{  ansible_user  }}"
+    minute: "00"
+    hour: "06"
+    job: >
+      mountpoint /home/igor/mnt/wd-1000 &&
+      curl https://hc-ping.com/<hidden-id>/start &&
+      rsync -a /home/igor/mnt/sk-1000/Backup /home/igor/mnt/wd-1000/ &&
+      curl https://hc-ping.com/<hidden-id> ||
+      curl https://hc-ping.com/<hidden-id>/fail
+    state: present
+
+# - name: "Backup from SK-1000 to Onedrive-IPT"
+#   ansible.builtin.cron:
+#     name: "Backup from SK-1000 to Onedrive-IPT"
+#     user: "{{  ansible_user  }}"
+#     minute: "00"
+#     hour: "05"
+#     job: 'rclone copy --max-age 240h --no-traverse /home/igor/mnt/sk-1000/Backup onedrive-ipt:/Backup && curl https://hc-ping.com/11286b8a-0384-4e66-88e7-49ef0b11a6c9'
+#     state: present
+
+- name: "Backup from WD-1000 to ES-500"
+  ansible.builtin.cron:
+    name: "Backup from WD-1000 to ES-500"
+    user: "{{  ansible_user  }}"
+    minute: "00"
+    hour: "07"
+    job: >
+      mountpoint /home/igor/mnt/es-500 &&
+      curl https://hc-ping.com/<hidden-id>/start &&
+      rsync -a /home/igor/mnt/sk-1000/Backup /home/igor/mnt/es-500/ &&
+      curl https://hc-ping.com/<hidden-id> ||
+      curl https://hc-ping.com/<hidden-id>/fail
+    state: present
+
+- name: "Up check"
+  ansible.builtin.cron:
+    name: "Up check"
+    user: "{{  ansible_user  }}"
+    minute: "*/30"
+    job: 'curl https://hc-ping.com/<hidden-id>'
+    state: present
+
+- name: Get disks
+  shell: ls /dev | grep sd | grep -v [0-9]$ | grep -v a
+  register: disks
+
+- name: "Disk idle"
+  ansible.builtin.cron:
+    name: Disk idle {{ item }}
+    user: "root"
+    special_time: reboot
+    job: sudo hdparm -B 64 /dev/{{ item }}
+    state: present
+  with_items: "{{ disks.stdout_lines }}"
+
+- name: "Disk idle constant"
+  ansible.builtin.cron:
+    name: Disk idle {{ item }}
+    user: "root"
+    minute: "*/30"
+    job: sudo hdparm -B 64 /dev/{{ item }}
+    state: present
+  with_items: "{{ disks.stdout_lines }}"
+
+- name: "Disk standby"
+  ansible.builtin.cron:
+    name: Disk standby {{ item }}
+    user: "root"
+    special_time: reboot
+    job: sudo hdparm -S 64 /dev/{{ item }}
+    state: present
+  with_items: "{{ disks.stdout_lines }}"
+
+- name: "Disk standby constant"
+  ansible.builtin.cron:
+    name: Disk idle {{ item }}
+    user: "root"
+    minute: "*/30"
+    job: sudo hdparm -S 64 /dev/{{ item }}
+    state: present
+  with_items: "{{ disks.stdout_lines }}"

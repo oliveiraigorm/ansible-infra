@@ -1,0 +1,74 @@
+---
+- name: "Create WD-1000 mount folder"
+  file:
+    path: "/home/igor/mnt/wd-1000"
+    state: directory
+    owner: "igor"
+    group: "igor"
+    mode: 0777
+
+- name: "Create SK-1000 mount folder"
+  file:
+    path: "/home/igor/mnt/sk-1000"
+    state: directory
+    owner: "igor"
+    group: "igor"
+    mode: 0777
+
+- name: "Create ES-500 mount folder"
+  file:
+    path: "/home/igor/mnt/es-500"
+    state: directory
+    owner: "igor"
+    group: "igor"
+    mode: 0777
+
+# - name: "Create OneDriveIPT mount folder"
+#   file:
+#     path: "/home/igor/mnt/onedrive-ipt"
+#     state: directory
+#     mode: 0777
+
+- name: Create WD-1000 mount
+  ansible.posix.mount:
+    path: /home/igor/mnt/wd-1000
+    src: LABEL=WD-1000
+    fstype: ntfs-3g
+    state: present
+    opts: rw,user,uid=1000,gid=1000
+    boot: yes
+
+- name: Create SK-1000 mount
+  ansible.posix.mount:
+    path: /home/igor/mnt/sk-1000
+    src: LABEL=SK-1000
+    fstype: ntfs-3g
+    state: present
+    opts: rw,user,uid=1000,gid=1000
+    boot: yes
+
+- name: Create ES-500 mount
+  ansible.posix.mount:
+    path: /home/igor/mnt/es-500
+    src: LABEL=ES-500
+    fstype: ntfs-3g
+    state: present
+    opts: rw,user,uid=1000,gid=1000
+    boot: yes
+
+- name: Mount Drives
+  ansible.builtin.command: mount -a
+
+- name: Ensure user_allow_other is enabled
+  ansible.builtin.lineinfile:
+    path: /etc/fuse.conf
+    regexp: '^#user_allow_other'
+    line: user_allow_other
+
+- name: Get disks
+  shell: ls /dev | grep sd | grep -v [0-9]$ | grep -v a
+  register: disks
+
+- name: Disk idle
+  ansible.builtin.command: sudo hdparm -B 64 /dev/{{ item }}
+  loop: "{{ disks.stdout_lines }}"

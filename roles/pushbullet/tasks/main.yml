@@ -1,0 +1,7 @@
+---
+- name: Deploy pushbullet script
+  template:
+    src: pushbullet.sh.j2
+    dest: "/usr/bin/pushbullet"
+    mode: 0775
+  tags: pushbullet

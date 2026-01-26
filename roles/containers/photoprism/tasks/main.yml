@@ -1,0 +1,52 @@
+- name: Create PhotoPrism Docker container
+  docker_container:
+    name: photoprism
+    image: photoprism/photoprism:latest
+    security_opts:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    published_ports:
+      - "2342:2342"
+    env:
+      PHOTOPRISM_ADMIN_USER: "admin"
+      PHOTOPRISM_ADMIN_PASSWORD: "{{ photoprism_admin_password }}"
+      PHOTOPRISM_AUTH_MODE: "password"
+      PHOTOPRISM_SITE_URL: "http://localhost:2342/"
+      PHOTOPRISM_DISABLE_TLS: "false"
+      PHOTOPRISM_DEFAULT_TLS: "true"
+    volumes:
+      - "/home/igor/mnt/sk-1000/Backup/Fotos:/photoprism/originals"
+      - "{{ docker_dir }}/{{ container_name }}/storage:/photoprism/storage"
+    working_dir: "/photoprism"
+
+- name: Create MariaDB Docker container
+  docker_container:
+    name: mariadb
+    image: mariadb:10.11
+    restart_policy: unless-stopped
+    security_opts:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    command: mariadbd --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    volumes:
+      - "{{ docker_dir }}/{{ container_name }}/database:/var/lib/mysql"
+    env:
+      MARIADB_AUTO_UPGRADE: "1"
+      MARIADB_INITDB_SKIP_TZINFO: "1"
+      MARIADB_DATABASE: "photoprism"
+      MARIADB_USER: "photoprism"
+      MARIADB_PASSWORD: "{{ photoprism_database_password }}"
+      MARIADB_ROOT_PASSWORD: "{{ photoprism_database_root_password }}"
+
+# - name: Create Watchtower Docker container
+#   docker_container:
+#     name: watchtower
+#     image: containrrr/watchtower
+#     restart_policy: unless-stopped
+#     env:
+#       WATCHTOWER_CLEANUP: "true"
+#       WATCHTOWER_POLL_INTERVAL: 7200
+#     volumes:
+#       - "/var/run/docker.sock:/var/run/docker.sock"
+#       - "~/.docker/config.json:/config.json"
+#   when: "'update' in inventory_dir.split('/')"

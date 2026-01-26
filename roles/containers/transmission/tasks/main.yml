@@ -1,0 +1,46 @@
+---
+- name: Add transmission directory
+  file:
+    state: directory
+    path: "{{ docker_dir }}/transmission"
+    owner: "igor"
+    group: "igor"
+    mode: 0755
+
+- name: Add transmission downloads directory
+  become: yes
+  file:
+    state: directory
+    path: "/home/igor/transmission-daemon/downloads"
+    owner: "igor"
+    group: "igor"
+    mode: 0777
+
+- name: Copy Transmission configuration
+  template:
+    src: settings.json.j2
+    dest: "{{ docker_dir }}/transmission/settings.json"
+    owner: "igor"
+    group: "igor"
+
+
+- name: Make sure the transmission container is created and running
+  docker_container:
+    name: "transmission"
+    image: "ghcr.io/linuxserver/transmission"
+    pull: yes
+    networks:
+      - name: docker_default
+    ports:
+      - "9091:9091"
+    state: 'started'
+    env:
+      "PUID": "{{ guid }}"
+      "PGID": "{{ guid }}"
+      "TZ": "{{ timezone }}"
+    volumes:
+      - "/etc/localtime:/etc/localtime"
+      - "{{ docker_dir }}/transmission:/config"
+      - "/home/igor/transmission-daemon/downloads:/downloads"
+      - "/home/igor/mnt/sk-1000/Filmes:/sk-1000/Filmes"
+    restart_policy: unless-stopped

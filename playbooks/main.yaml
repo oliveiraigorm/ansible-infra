@@ -1,0 +1,107 @@
+---
+- hosts: thinkpad
+  become: true
+
+  roles:
+      - role: roles/system
+        tags:
+            - system
+
+      - role: roles/pushbullet
+        tags:
+            - pushbullet
+
+      - role: roles/docker
+        tags:
+            - docker
+
+      - role: roles/cron
+        tags:
+            - cron
+
+      - role: roles/nginx
+        tags:
+            - nginx
+
+      - role: roles/mounts
+        tags:
+            - mounts
+
+      - role: roles/containers/rclone-volume
+        tags:
+            - rclone
+            - rclone-volume
+            - containers
+
+      # - role: roles/rclone-service
+      #   become: no
+      #   tags:
+      #       - rclone-service
+
+      - role: roles/containers/media/plex
+        tags:
+            - plex
+            - containers
+
+      - role: roles/containers/netdata
+        tags:
+            - netdata
+            - containers
+
+      # - role: roles/ansible-role-duckdns
+      #   become: yes
+      #   tags:
+      #       - duckdns
+
+      - role: roles/containers/transmission
+        tags:
+            - transmission
+            - containers
+
+      - role: roles/containers/media/jackett
+        tags:
+            - jackett
+            - containers
+
+      - role: roles/containers/media/radarr
+        tags:
+            - radarr
+            - containers
+
+      - role: roles/containers/media/sonarr
+        tags:
+            - sonarr
+            - containers
+
+      - role: roles/containers/media/prowlarr
+        tags:
+            - prowlarr
+            - containers
+
+      - role: roles/containers/media/tautulli
+        tags:
+            - tautulli
+            - containers
+
+      - role: roles/containers/unifi
+        tags:
+            - unifi
+            - containers
+
+      - role: roles/containers/media/xteve
+        tags:
+            - xteve
+            - containers
+
+      - role: roles/containers/photoprism
+        tags:
+            - photoprism
+            - containers
+
+- hosts: all
+  become: false
+
+  roles:
+      - role: roles/restic_backup
+        tags:
+            - restic-backup

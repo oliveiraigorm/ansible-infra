@@ -1,0 +1,76 @@
+---
+- name: Copy the public SSH key
+  authorized_key:
+    user: "{{ username }}"
+    state: present
+    key: "{{ ssh_public_key }}"
+
+- name: Replace the hostname entry with our own
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    insertafter: ^127\.0\.0\.1 *localhost
+    line: "127.0.0.1 thinkpad.local"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Disable root login over SSH
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+  notify:
+    - restart sshd
+
+- name: Disable password login
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+  notify:
+  - restart sshd
+
+- name: Disable Sleep
+  ansible.builtin.blockinfile:
+    path: /etc/systemd/logind.conf
+    block: |
+      HandleSuspendKey=ignore
+      HandleHibernateKey=ignore
+      HandleLidSwitch=ignore
+      HandleLidSwitchExternalPower=ignore
+      HandleLidSwitchDocked=ignore
+
+- name: Install Remote Desktop
+  apt:
+    name: xrdp
+    state: present
+
+- name: Enable Remote Desktop
+  ansible.builtin.command: systemctl enable --now xrdp
+
+- name: Allow Remote Desktop Firewall
+  ansible.builtin.command: ufw allow from any to any port 3389 proto tcp
+
+# - name: Allow Remote Desktop Firewall
+#   community.general.ufw:
+#     rule: allow
+#     port: authufw allow from any to any port 3389 proto tcp
+
+- name: Install tmux
+  ansible.builtin.apt:
+    name: tmux
+    state: present
+
+- name: Make tmux auto-start on SSH
+  ansible.builtin.lineinfile:
+    path: "/home/{{ username }}/.bashrc"
+    insertafter: EOF
+    line: |
+      # Auto-start tmux session on SSH
+      if [[ -n "$SSH_CONNECTION" ]]; then
+          if [ -z "$TMUX" ]; then
+              tmux attach-session -t 0 || tmux new-session
+          fi
+      fi
+
+- name: Make tmux scrollable
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.tmux.conf"
+    content: |
+      set -g mouse on
+    owner: "{{ username }}"
+    mode: '0644'

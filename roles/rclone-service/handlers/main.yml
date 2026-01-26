@@ -1,0 +1,7 @@
+- name: reload systemctl  
+  become_user: igor
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+#   become: yes
+#   command: runuser -l  igor -c 'systemctl --user daemon-reload'

@@ -1,0 +1,35 @@
+---
+# rclone plugin setup
+
+- name: "Create docker rclone plugin config folder"
+  ansible.builtin.file:
+    path: "/var/lib/docker-plugins/rclone/config"
+    state: directory
+    mode: 0755
+    recurse: yes
+
+- name: "Create docker rclone plugin cache folder"
+  ansible.builtin.file:
+    path: "/var/lib/docker-plugins/rclone/cache"
+    state: directory
+    mode: 0755
+    recurse: yes
+
+- name: Copy Rclone configuration
+  ansible.builtin.copy:
+    src: rclone.conf
+    dest: "/var/lib/docker-plugins/rclone/config/rclone.conf"
+
+- name: Install rclone plugin
+  ansible.builtin.command: docker plugin install rclone/docker-volume-rclone:amd64 args="-v" --alias rclone --grant-all-permissions
+  ignore_errors: true
+
+- name: Create onedrive-ipt volume
+  docker_volume:
+    name: onedrive-ipt
+    driver: 'rclone'
+    driver_options:
+      remote: 'onedrive-ipt:'
+      allow_other: 'true'
+      vfs_cache_mode: writes
+      vfs_cache_max_size: 100M

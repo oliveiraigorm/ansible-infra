@@ -1,0 +1,59 @@
+#!/bin/bash
+set -euo pipefail
+RESTIC_PASSWD="{{ ansible_user_dir }}/.restic/.restic_passwd"
+RESTIC_EXCLUDE_FILE="{{ ansible_user_dir }}/.restic/.restic_exclude"
+BACKUP_REPO="{{ restic_backup_repository }}"
+KEEP_OPTIONS="--keep-hourly 2 --keep-daily 6 --keep-weekly 3 --keep-monthly 1"
+HOST_TAG="{{ ansible_hostname }}"
+HEALTHCHECK_URL="https://hc-ping.com/<hidden-id>"
+
+FAILURE=0
+LOGFILE="/tmp/restic-backup.log"
+
+exec >> "$LOGFILE" 2>&1
+
+echo "=== Backup started: $(date) on $HOST_TAG ==="
+curl -fsS --retry 3 "$HEALTHCHECK_URL/start" >/dev/null 2>&1 || true
+
+# Initialize repository if it doesn't exist
+if ! /usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" cat config >/dev/null 2>&1; then
+    echo "Initializing restic repository at $BACKUP_REPO"
+    /usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" init
+fi
+
+# Unlock stale locks
+/usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" unlock || true
+
+# Loop over each source path and backup individually with its key as tag
+{% for service, path in restic_backup_source_paths.items() %}
+echo "Backing up {{ service }}: {{ path }}"
+/usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" \
+    --host "$HOST_TAG" \
+    --tag "{{ service }}" \
+    --exclude-caches \
+    --exclude-file="$RESTIC_EXCLUDE_FILE" \
+    backup "{{ path }}"
+
+echo "{{ service }} backup complete: $(/usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" stats --host "$HOST_TAG" --tag "{{ service }}")"
+{% endfor %}
+
+# Forget with all relevant tags (host + service tags)
+{% for service in restic_backup_source_paths.keys() %}
+/usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" \
+    forget \
+    --host "$HOST_TAG" \
+    --tag "{{ service }}" \
+    --group-by host,tags \
+    $KEEP_OPTIONS \
+    --cleanup-cache || true
+{% endfor %}
+
+# ping the health check URL if everything went well
+if [ $? -eq 0 ]; then
+    curl -fsS --retry 3 "$HEALTHCHECK_URL" >/dev/null 2>&1 || true
+else
+    FAILURE=1
+fi
+
+echo "=== Backup finished: $(date) ==="
+exit $FAILURE

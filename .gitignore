@@ -1,0 +1,19 @@
+# Ansible vault files
+*vault*.yml
+.vault_pass
+.ansible_vault_pass
+
+# Sensitive configuration files
+*.key
+*.pem
+*.crt
+*.p12
+rclone.conf
+
+# Local configuration
+host_vars/*/vault.yml
+group_vars/*/vault.yml
+
+# Backup files
+*.bak
+*.bak.*

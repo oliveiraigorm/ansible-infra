@@ -1,0 +1,66 @@
+---
+- name: Create Jackett config directoy
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/{{ container_name }}/Jackett"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+    state: directory
+
+- name: Create Jackett Indexers directoy
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/{{ container_name }}/Jackett/Indexers"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+    state: directory
+
+- name: Create Jackett DataProtection directoy
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/{{ container_name }}/Jackett/DataProtection"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+    state: directory
+
+- name: Deploy Jackett config
+  ansible.builtin.template:
+    src: ServerConfig.json.j2
+    dest: "{{ docker_dir }}/{{ container_name }}/Jackett/ServerConfig.json"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+    force: yes
+
+- name: Copy Indexers
+  template:
+    src: "{{ item }}"
+    dest: "{{ docker_dir }}/{{ container_name }}/Jackett/Indexers/{{ item | basename | regex_replace('\\.j2$', '') }}"
+  with_fileglob:
+    - ../templates/Indexers/*.j2
+
+- name: Copy Keys
+  template:
+    src: "{{ item }}"
+    dest: "{{ docker_dir }}/{{ container_name }}/Jackett/DataProtection/{{ item | basename | regex_replace('\\.j2$', '') }}"
+  with_fileglob:
+    - ../templates/DataProtection/*.j2
+
+- name: Make sure the Jackett container is created and running
+  docker_container:
+    name: "{{ container_name }}"
+    image: "ghcr.io/linuxserver/jackett"
+    pull: yes
+    networks:
+      - name: docker_default
+    state: 'started'
+    env:
+      "PUID": "{{ guid }}"
+      "PGID": "{{ guid }}"
+      "TZ": "{{ timezone }}"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ docker_dir }}/{{ container_name }}:/config"
+    restart_policy: unless-stopped
+    ports:
+      - "9117:9117"

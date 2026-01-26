@@ -1,0 +1,42 @@
+---
+- name: create restic config directory
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/.restic"
+    state: directory
+    owner: "{{ username }}"
+    mode: '0755'
+
+- name: create restic backup password file
+  ansible.builtin.copy:
+    dest: "{{ ansible_user_dir }}/.restic/.restic_passwd"
+    content: "{{ restic_backup_password }}"
+    owner: "{{ username }}"
+    mode: '0600'
+
+- name: create restic backup exclude file
+  ansible.builtin.copy:
+    dest: "{{ ansible_user_dir }}/.restic/.restic_exclude"
+    content: "{{ restic_backup_exclude_paths | join('\n') }}"
+    owner: "{{ username }}"
+    mode: '0755'
+
+- name: make sure bin directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_user_dir }}/bin"
+    state: directory
+    owner: "{{ username }}"
+    mode: '0755'
+
+- name: deploy restic backup script to bin
+  ansible.builtin.template:
+    src: restic-custom-backup.sh.j2
+    dest: "{{ ansible_user_dir }}/bin/restic-custom-backup"
+    owner: "{{ username }}"
+    mode: '0755'
+
+- name: make sure bin is in PATH
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    line: 'export PATH=$PATH:$HOME/bin'
+    regexp: '^export PATH=.*\$HOME/bin'
+    state: present

@@ -1,0 +1,60 @@
+---
+- name: Check if Docker is installed
+  command: docker --version
+  register: docker_check
+  ignore_errors: yes
+
+- name: Install Docker if not present using official script
+  when: docker_check.rc != 0
+  become: yes
+  ansible.builtin.shell: |
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+  args:
+    executable: /bin/bash
+
+- name: Ensure group docker exists
+  group:
+    name: docker
+    state: present
+
+- name: Add user "{{ username }}" to group docker
+  user:
+    name: '{{ username }}'
+    groups:
+      - docker
+    append: yes
+
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+
+- name: Make sure Docker is running and enabled
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Get a list of containers
+  delegate_to: localhost
+  become: no
+  find:
+    paths:
+      - "../roles/containers/media"
+    file_type: directory
+    recurse: no
+  register: containers
+
+- name: Chmod the data folder
+  become: yes
+  file:
+    dest: "{{ docker_dir }}"
+    state: directory
+    owner: "{{ username }}"
+    mode: "0775"
+    group: "users"
+    recurse: yes
+
+- name: Create a container default network
+  docker_network:
+    name: docker_default
