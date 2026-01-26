@@ -1,5 +1,7 @@
 # My Personal Infrastructure
 
+> **⚠️ Important Notice**: This repository has been sanitized for public sharing. All personal information, sensitive data, and encrypted vault files have been removed. You will need to create your own `vault.yml` file with your personal secrets and update host-specific configurations before using these playbooks.
+
 This repository contains the Ansible playbooks and roles I use to manage my personal infrastructure, primarily my home server (`thinkpad`). It follows the principles of Infrastructure as Code (IaC) to ensure a reproducible, version-controlled, and automated setup.
 
 ## Overview
@@ -58,6 +60,8 @@ infra/
 2.  **SSH Access**: You need passwordless SSH access to the target hosts (e.g., `thinkpad`, `nodes`) using SSH keys.
 
 ### Secrets Management
+
+**Note**: The `group_vars/all/vault.yml` file has been removed for security reasons. You must create this file yourself.
 
 This repository uses Ansible Vault to manage secrets. The file `group_vars/all/vault.yml` should be created and encrypted. It contains all `vault_*` variables referenced in `group_vars/all/vars.yml`.
 
