@@ -20,3 +20,15 @@
       - onedrive-ipt:/onedrive-ipt:ro
     restart_policy: unless-stopped
     network_mode: host
+
+- name: Make sure the Plex Auto Languages container is created and running
+  docker_container:
+    name: plexautolanguages
+    state: started
+    image: journeyover/plex-auto-languages:main
+    env:
+      "PLEX_URL" : "http://{{ ansible_host }}:32400"
+      # PLEX_TOKEN is a sensitive value and should be set in your vault.yml
+      "PLEX_TOKEN" : "{{ plex_token }}"
+      "TZ" : "{{ timezone }}"
+    network_mode: host

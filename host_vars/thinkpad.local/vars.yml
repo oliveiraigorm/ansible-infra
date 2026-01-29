@@ -1,11 +1,19 @@
 ---
 ansible_become_password: "{{ vault_ansible_become_password }}"
+
 netdata_claim_token: "{{ vault_netdata_claim_token }}"
 netdata_claim_rooms: "{{ vault_netdata_claim_rooms }}"
+
+healthcheck_url: "https://hc-ping.com/<your-unique-uuid>"
 restic_backup_repository: "{{  ansible_user_dir  }}/mnt/sk-1000/restic_backups"
 restic_backup_source_paths:
-  sonarr: "{{ docker_dir }}/sonarr/Backups"
-  radarr: "{{ docker_dir }}/radarr/Backups"
-  prowlarr: "{{ docker_dir }}/prowlarr/Backups"
-  plex: "{{ docker_dir }}/plex/"
-  atuin: "{{ ansible_user_dir }}/.local/share/atuin"
+  sonarr:
+    - "{{ docker_dir }}/sonarr/Backups"
+  radarr:
+    - "{{ docker_dir }}/radarr/Backups"
+  prowlarr:
+    - "{{ docker_dir }}/prowlarr/Backups"
+  plex:
+    - "{{ docker_dir }}/plex/"
+  atuin:
+    - "{{ ansible_user_dir }}/.local/share/atuin"

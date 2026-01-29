@@ -1,0 +1,14 @@
+---
+ansible_become_password: "{{ vault_ansible_become_password }}"
+
+healthcheck_url: "https://hc-ping.com/<your-unique-uuid>"
+
+restic_backup_repository: "sftp:igor@thinkpad:{{ ansible_user_dir }}/mnt/sk-1000/restic_backups"
+restic_backup_source_paths:
+  wsl-backup:
+    - "{{ ansible_user_dir }}/.ssh"
+    - "{{ ansible_user_dir }}/.bashrc"
+    - "{{ ansible_user_dir }}/.vimrc"
+    - "{{ ansible_user_dir }}/.gitconfig"
+    - "/etc/wsl.conf"
+restic_cron_enabled: true

@@ -4,3 +4,7 @@
 
 - name: Setup restic common configuration
   include_tasks: setup.yml
+
+- name: Setup restic backup cron job
+  include_tasks: cron.yml
+  when: restic_cron_enabled | default(false)

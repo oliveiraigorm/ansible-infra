@@ -1,0 +1,9 @@
+---
+- name: Restic Backup Job
+  ansible.builtin.cron:
+    name: "Restic Backup Job"
+    user: "{{  ansible_user  }}"
+    job: /home/igor/bin/restic-custom-backup
+    minute: "00"
+    hour: "12"
+    state: present

@@ -5,7 +5,7 @@ RESTIC_EXCLUDE_FILE="{{ ansible_user_dir }}/.restic/.restic_exclude"
 BACKUP_REPO="{{ restic_backup_repository }}"
 KEEP_OPTIONS="--keep-hourly 2 --keep-daily 6 --keep-weekly 3 --keep-monthly 1"
 HOST_TAG="{{ ansible_hostname }}"
-HEALTHCHECK_URL="https://hc-ping.com/<hidden-id>"
+HEALTHCHECK_URL="{{ healthcheck_url }}"
 
 FAILURE=0
 LOGFILE="/tmp/restic-backup.log"
@@ -32,7 +32,7 @@ echo "Backing up {{ service }}: {{ path }}"
     --tag "{{ service }}" \
     --exclude-caches \
     --exclude-file="$RESTIC_EXCLUDE_FILE" \
-    backup "{{ path }}"
+    backup "{{ path | join('" "') }}"
 
 echo "{{ service }} backup complete: $(/usr/local/bin/restic -p "$RESTIC_PASSWD" -r "$BACKUP_REPO" stats --host "$HOST_TAG" --tag "{{ service }}")"
 {% endfor %}
