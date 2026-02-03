@@ -1,6 +1,13 @@
 ---
+- name: Check if restic is already installed
+  shell: which restic
+  register: restic_check
+  changed_when: false
+  failed_when: false
+
 - name: Install restic
   include_tasks: install.yml
+  when: restic_check.rc != 0
 
 - name: Setup restic common configuration
   include_tasks: setup.yml

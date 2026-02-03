@@ -17,3 +17,5 @@ restic_backup_source_paths:
     - "{{ docker_dir }}/plex/"
   atuin:
     - "{{ ansible_user_dir }}/.local/share/atuin"
+  openclaw:
+    - "{{ ansible_user_dir }}/.openclaw"
