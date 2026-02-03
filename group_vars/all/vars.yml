@@ -12,6 +12,9 @@ ssh_public_key: "{{ vault_ssh_public_key }}"
 ## Pushbullet
 pushbullet_key: "{{ vault_pushbullet_key }}"
 
+## Plex
+plex_token: "{{ vault_plex_token }}"
+
 ## DuckDNS
 duckdns_token: "{{ vault_duckdns_token }}"
 
@@ -32,3 +35,4 @@ restic_backup_exclude_paths:
   - "**/Caches/**"
   - "**/Thumbnails/**"
   - "**/Logs/**"
+  - "**/.vscode-server"

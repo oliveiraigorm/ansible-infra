@@ -11,4 +11,6 @@ restic_backup_source_paths:
     - "{{ ansible_user_dir }}/.vimrc"
     - "{{ ansible_user_dir }}/.gitconfig"
     - "/etc/wsl.conf"
+  atuin-backup:
+    - "{{ ansible_user_dir }}/.local/share/atuin/"
 restic_cron_enabled: true
