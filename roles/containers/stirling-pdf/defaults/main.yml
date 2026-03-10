@@ -1,0 +1,3 @@
+---
+container_name: stirling-pdf
+stirling_pdf_port: 8090

@@ -1,0 +1,39 @@
+---
+- name: Create Homer directory
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/{{ container_name }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+
+- name: Create Homer assets directory
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/{{ container_name }}/assets"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+
+- name: Deploy Homer config.yml
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: "{{ docker_dir }}/{{ container_name }}/assets/config.yml"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+
+- name: Create Homer container
+  docker_container:
+    name: "{{ container_name }}"
+    image: b4bz/homer:latest
+    state: started
+    restart_policy: unless-stopped
+    pull: yes
+    volumes:
+      - "{{ docker_dir }}/{{ container_name }}/assets:/www/assets"
+    ports:
+      - "{{ homer_port }}:8080"
+    env:
+      UID: "{{ guid }}"
+      GID: "{{ guid }}"

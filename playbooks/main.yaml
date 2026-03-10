@@ -38,6 +38,16 @@
       #   tags:
       #       - rclone-service
 
+      - role: roles/containers/stirling-pdf
+        tags:
+            - stirling-pdf
+            - containers
+
+      - role: roles/containers/media/immich
+        tags:
+            - immich
+            - containers
+
       - role: roles/containers/media/plex
         tags:
             - plex
@@ -93,9 +103,9 @@
             - xteve
             - containers
 
-      - role: roles/containers/photoprism
+      - role: roles/containers/homer
         tags:
-            - photoprism
+            - homer
             - containers
 
 - hosts: all

@@ -1,0 +1,3 @@
+---
+container_name: homer
+homer_port: 8095

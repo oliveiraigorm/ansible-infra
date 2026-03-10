@@ -1,0 +1,24 @@
+---
+- name: Install opencode via install script
+  shell: "curl -fsSL https://opencode.ai/install | bash"
+  args:
+    creates: "{{ ansible_user_dir }}/.opencode/bin/opencode"
+
+- name: Ensure opencode config directory exists
+  file:
+    path: "{{ ansible_user_dir }}/.config/opencode"
+    state: directory
+    mode: '0755'
+
+- name: Configure opencode
+  copy:
+    src: opencode.json
+    dest: "{{ ansible_user_dir }}/.config/opencode/opencode.json"
+    mode: '0644'
+
+- name: Add opencode to PATH
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    line: 'export PATH=$PATH:{{ ansible_user_dir }}/.opencode/bin'
+    state: present
+    create: yes

@@ -1,0 +1,123 @@
+---
+- name: Create Immich directories
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/{{ container_name }}/{{ item }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+  loop:
+    - postgres
+    - model-cache
+    - data
+
+- name: Create Immich upload subdirectories
+  ansible.builtin.file:
+    path: "/home/igor/mnt/sk-1000/Backup/Fotos_immich/{{ item }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0755
+  loop:
+    - thumbs
+    - upload
+    - backups
+    - library
+    - profile
+    - encoded-video
+
+- name: Create Immich marker files for integrity checks
+  ansible.builtin.copy:
+    content: ""
+    dest: "/home/igor/mnt/sk-1000/Backup/Fotos_immich/{{ item }}/.immich"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+    force: false
+  loop:
+    - thumbs
+    - upload
+    - backups
+    - library
+    - profile
+    - encoded-video
+
+- name: Create Immich network
+  docker_network:
+    name: immich_network
+    state: present
+
+- name: Create Immich Redis container
+  docker_container:
+    name: immich_redis
+    image: docker.io/valkey/valkey:9
+    restart_policy: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+    networks:
+      - name: immich_network
+
+- name: Create Immich Database container
+  docker_container:
+    name: immich_postgres
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.5.3
+    restart_policy: unless-stopped
+    env:
+      POSTGRES_PASSWORD: "{{ immich_db_password }}"
+      POSTGRES_USER: "{{ immich_db_username }}"
+      POSTGRES_DB: "{{ immich_db_database_name }}"
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    volumes:
+      - "{{ docker_dir }}/{{ container_name }}/postgres:/var/lib/postgresql/data"
+    shm_size: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --dbname='{{ immich_db_database_name }}' --username='{{ immich_db_username }}' || exit 1; Chksum=\"$(psql --dbname='{{ immich_db_database_name }}' --username='{{ immich_db_username }}' --tuples-only --no-align --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')\"; echo \"checksum failure count is $Chksum\"; [ \"$Chksum\" = '0' ] || exit 1"]
+      interval: 5m
+      start_period: 5m
+    networks:
+      - name: immich_network
+
+- name: Create Immich Machine Learning container
+  docker_container:
+    name: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:{{ immich_version }}
+    restart_policy: unless-stopped
+    pull: true
+    volumes:
+      - "{{ docker_dir }}/{{ container_name }}/model-cache:/cache"
+    env:
+      IMMICH_MACHINE_LEARNING_CACHE_DIR: /cache
+    networks:
+      - name: immich_network
+
+- name: Copy Immich config file
+  ansible.builtin.copy:
+    src: immich.json
+    dest: "{{ docker_dir }}/{{ container_name }}/immich.json"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+
+- name: Create Immich Server container
+  docker_container:
+    name: immich_server
+    image: ghcr.io/immich-app/immich-server:{{ immich_version }}
+    restart_policy: unless-stopped
+    pull: true
+    ports:
+      - "{{ immich_port }}:2283"
+    networks:
+      - name: immich_network
+    env:
+      DB_HOSTNAME: immich_postgres
+      DB_USERNAME: "{{ immich_db_username }}"
+      DB_PASSWORD: "{{ immich_db_password }}"
+      DB_DATABASE_NAME: "{{ immich_db_database_name }}"
+      REDIS_HOSTNAME: immich_redis
+      IMMICH_MACHINE_LEARNING_URL: http://immich_machine_learning:3003
+      IMMICH_CONFIG_FILE: /config/immich.json
+    volumes:
+      - "{{ docker_dir }}/{{ container_name }}/immich.json:/config/immich.json:ro"
+      - "/home/igor/mnt/sk-1000/Backup/Fotos_immich:/usr/src/app/upload:rw"
+      - "/etc/localtime:/etc/localtime:ro"
+      # - "/home/igor/mnt/sk-1000/Backup/Fotos:/mnt/photos:ro"

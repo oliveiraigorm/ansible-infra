@@ -23,7 +23,7 @@ The core components managed by these playbooks are:
 *   **Containerization**: Docker
 *   **Key Services**:
     *   **Media**: Plex, Sonarr, Radarr, Jackett, Prowlarr, Transmission, Tautulli, xTeVe
-    *   **Photos**: Photoprism
+    *   **Photos**: Immich
     *   **Network**: Unifi Controller, DuckDNS
     *   **Monitoring**: Netdata
     *   **Backups**: Restic, rclone
@@ -37,7 +37,8 @@ infra/
 │   │   ├── vars.yml    # Common variables
 │   │   └── vault.yml   # Encrypted secrets (using Ansible Vault)
 ├── playbooks/
-│   └── main.yaml       # The main playbook to run
+│   ├── main.yaml       # The main playbook to run
+│   └── immich-import.yaml  # Standalone playbook for photo import
 └── roles/              # Ansible roles for each component
     ├── system/
     ├── docker/
@@ -48,8 +49,9 @@ infra/
     └── ...
 ```
 
-*   `playbooks/main.yaml`: The main entry point that applies roles to hosts.
-*   `group_vars/`: Contains all the variables. Sensitive data like passwords and API keys are stored in an encrypted `vault.yml` file.
+*   `playbooks/main.yaml`: The main entry point that applies all roles to hosts.
+*   `playbooks/immich-import.yaml`: Standalone playbook to import photos to Immich.
+*   `group_vars/`: Contains all the variables. Sensitive data like passwords and API keys are stored in encrypted `vault.yml` files.
 *   `roles/`: Each role is responsible for a specific piece of the infrastructure (e.g., installing Docker, deploying Plex, setting up cron jobs).
 
 ## Setup and Usage
@@ -61,9 +63,7 @@ infra/
 
 ### Secrets Management
 
-**Note**: The `group_vars/all/vault.yml` file has been removed for security reasons. You must create this file yourself.
-
-This repository uses Ansible Vault to manage secrets. The file `group_vars/all/vault.yml` should be created and encrypted. It contains all `vault_*` variables referenced in `group_vars/all/vars.yml`.
+This repository uses Ansible Vault to manage secrets. The files `group_vars/all/vault.yml` and host-specific `vault.yml` files should be created and encrypted. They contain all `vault_*` variables referenced in `vars.yml` files.
 
 1.  **Create a vault password file**:
     This file should be added to your `.gitignore` to prevent it from being committed to version control.
@@ -71,15 +71,20 @@ This repository uses Ansible Vault to manage secrets. The file `group_vars/all/v
     echo "your-vault-password" > .ansible_vault_pass
     ```
 
-2.  **Create and edit the vault file**:
+2.  **Create and edit vault files**:
     ```bash
     ansible-vault create group_vars/all/vault.yml --vault-password-file .ansible_vault_pass
+    ansible-vault create host_vars/thinkpad.local/vault.yml --vault-password-file .ansible_vault_pass
+    ansible-vault create host_vars/ally/vault.yml --vault-password-file .ansible_vault_pass
+    ansible-vault create host_vars/localhost/vault.yml --vault-password-file .ansible_vault_pass
     ```
 
-3.  **Populate `vault.yml`** with your secrets:
+3.  **Populate `vault.yml`** files with your secrets:
     ```yaml
+    # group_vars/all/vault.yml
     vault_ssh_public_key: "ssh-rsa AAAA..."
     vault_pushbullet_key: "o.xxxxxxxxxx"
+    vault_plex_token: "your-plex-token"
     # ... and so on for all other secrets
     ```
 
@@ -93,7 +98,20 @@ ansible-playbook playbooks/main.yaml --vault-password-file .ansible_vault_pass
 
 # Run only specific tasks using tags
 ansible-playbook playbooks/main.yaml --vault-password-file .ansible_vault_pass --tags "docker,plex"
+
+# Run on specific host only
+ansible-playbook playbooks/main.yaml --vault-password-file .ansible_vault_pass --limit thinkpad.local
 ```
+
+### Importing Photos to Immich
+
+To import photos from a folder into Immich using the CLI:
+
+```bash
+ansible-playbook playbooks/immich-import.yaml -e import_path=/path/to/photos --vault-password-file .ansible_vault_pass
+```
+
+Replace `/path/to/photos` with the folder containing photos you want to import.
 
 ## Author
 
