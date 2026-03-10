@@ -1,10 +1,9 @@
 ---
 ansible_become_password: "{{ vault_ansible_become_password }}"
-
 netdata_claim_token: "{{ vault_netdata_claim_token }}"
 netdata_claim_rooms: "{{ vault_netdata_claim_rooms }}"
-
 healthcheck_url: "https://hc-ping.com/<your-unique-uuid>"
+immich_db_password: "{{ vault_immich_db_password }}"
 restic_backup_repository: "{{  ansible_user_dir  }}/mnt/sk-1000/restic_backups"
 restic_backup_source_paths:
   sonarr:

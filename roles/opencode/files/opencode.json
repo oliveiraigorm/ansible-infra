@@ -1,0 +1,11 @@
+{
+  "permission": {
+    "bash": "ask",
+    "edit": "ask",
+    "read": {
+      "*.env": "deny"
+    }
+  },
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-gemini-auth@latest"]
+}

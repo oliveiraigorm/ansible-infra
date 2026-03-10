@@ -1,0 +1,65 @@
+---
+# Homer configuration
+# See https://github.com/b4bz/homer for more information
+
+title: "Thinkpad Dashboard"
+subtitle: "Infrastructure & Media"
+logo: "logo.png"
+
+header: true
+footer: '<p>Created with <span class="has-text-danger">❤️</span> by Igor</p>'
+
+theme: default
+
+services:
+  - name: "Media Management"
+    icon: "fas fa-video"
+    items:
+      - name: "Plex"
+        icon: "fas fa-play-circle"
+        subtitle: "Media Server"
+        url: "https://app.plex.tv"
+      - name: "Tautulli"
+        icon: "fas fa-chart-bar"
+        subtitle: "Plex Monitoring"
+        url: "/tautulli"
+      - name: "Sonarr"
+        icon: "fas fa-tv"
+        subtitle: "TV Series"
+        url: "/sonarr"
+      - name: "Radarr"
+        icon: "fas fa-film"
+        subtitle: "Movies"
+        url: "/radarr"
+      - name: "Prowlarr"
+        icon: "fas fa-search"
+        subtitle: "Indexer Manager"
+        url: "/prowlarr"
+      - name: "Jackett"
+        icon: "fas fa-archive"
+        subtitle: "API Support"
+        url: "/jackett"
+      - name: "Transmission"
+        icon: "fas fa-download"
+        subtitle: "BitTorrent Client"
+        url: "/transmission"
+
+  - name: "Tools & Utilities"
+    icon: "fas fa-tools"
+    items:
+      - name: "Immich"
+        icon: "fas fa-images"
+        subtitle: "Photos"
+        url: "/immich/"
+      - name: "Stirling PDF"
+        icon: "fas fa-file-pdf"
+        subtitle: "PDF Tools"
+        url: "/stirling-pdf/"
+      - name: "Netdata"
+        icon: "fas fa-heartbeat"
+        subtitle: "System Monitoring"
+        url: "http://192.168.10.120:19999"
+      - name: "UniFi"
+        icon: "fas fa-network-wired"
+        subtitle: "Network Controller"
+        url: "https://unifi.ui.com"

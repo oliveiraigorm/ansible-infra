@@ -1,0 +1,25 @@
+---
+- name: Import photos to Immich via CLI
+  hosts: thinkpad
+  vars:
+    immich_api_key: "{{ vault_immich_api_key }}"
+  
+  tasks:
+    - name: Fail if import_path not provided
+      ansible.builtin.fail:
+        msg: "Please provide import_path variable: -e import_path=/path/to/photos"
+      when: import_path is not defined
+
+    - name: Run Immich CLI to import photos
+      docker_container:
+        name: immich_cli_import
+        image: ghcr.io/immich-app/immich-cli:latest
+        auto_remove: true
+        networks:
+          - name: immich_network
+        env:
+          IMMICH_INSTANCE_URL: "http://immich_server:2283/api"
+          IMMICH_API_KEY: "{{ immich_api_key }}"
+        volumes:
+          - "{{ import_path }}:/import:ro"
+        command: upload --recursive /import

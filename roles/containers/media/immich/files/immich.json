@@ -1,0 +1,7 @@
+{
+  "storageTemplate": {
+    "enabled": true,
+    "hashVerificationEnabled": true,
+    "template": "{{filename}}"
+  }
+}
